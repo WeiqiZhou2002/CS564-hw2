@@ -1,6 +1,6 @@
 rm -f *.dat
 rm -f *.db
-python skeleton_parser.py items-*.json
+python skeleton_parser.py ebay_data/items-*.json
 sort -u Category.dat -o category.dat
 sort -u User.dat -o user.dat
 sort -u Bid.dat -o bid.dat
