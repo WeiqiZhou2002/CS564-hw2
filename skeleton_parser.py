@@ -82,76 +82,114 @@ def parseJson(json_file):
             given `json_file' and generate the necessary .dat files to generate
             the SQL tables based on your relation design
             """
-
-            item_id = item['ItemID']
-            name = item['Name']
-            categories = item['Category']
-            currently = transformDollar(item['Currently'])
-            first_bid = transformDollar(item['First_Bid'])
-            number_of_bids = item['Number_of_Bids']
-            bids = item['Bids']
+            ItemID = item["ItemID"]
+            Categories = item["Category"]
+            Bids = item["Bids"]
+            Seller = item["Seller"]
+            SellerID = Seller["UserID"]
             
-            started = transformDttm(item['Started'])
-            ends = transformDttm(item['Ends'])
- 
-            seller = item['Seller']
-            seller_id = seller['UserID']
-            seller_rating = seller['Rating']
-            item_location = item['Location']
-            item_country = item['Country']
-            
-            description = item['Description']
-            
-            with open('item.dat', 'a') as outfile:
-                outfile.write(f"{item_id}{columnSeparator}{name}{columnSeparator}{seller_id}{columnSeparator}{currently}{columnSeparator}{first_bid}{columnSeparator}{number_of_bids}{columnSeparator}{started}{columnSeparator}{ends}{columnSeparator}{description}\n")
-                
-            for category in categories:
-                with open('category.dat', 'a') as catfile:
-                    catfile.write(f"{item['ItemID']}{columnSeparator}\"{category}\"\n")
-            
-            with open('user.dat', 'a') as f1:
-                Bids = item.get("Bids")
-                if Bids is not None:
-                    for i in range(len(Bids)):
-                        bidder = Bids[i]["Bid"]["Bidder"]
-                        info = "\"" + sub(r'\"', '\"\"', bidder["UserID"]) + "\"" if bidder.get("UserID") is not None else "NULL"
-                        info += "|" + (bidder["Rating"] if bidder.get("Rating") is not None else "NULL")
-                        info += "|" + ("\"" + sub(r'\"', '\"\"', bidder["Location"]) + "\"" if "Location" in bidder and bidder["Location"] is not None else "NULL")
-                        info += "|" + ("\"" + sub(r'\"', '\"\"', bidder["Country"]) + "\"" if "Country" in bidder and bidder["Country"] is not None else "NULL")
-                        info += "\n"
-                        f1.write(info)
+            # Item.dat (Item_ID, Seller_ID, Name, Currently, Buy_Price, First_Bid, Number_of_Bids, Started, Ends, Description)
+            with open('Item.dat', 'a') as f1:
+                if not item["Name"] == None:
+                    Name = sub(r'\"','\"\"',item["Name"])
+                else:
+                    Name = "NULL"
+                if not item["Currently"] == None:
+                    Currently =  transformDollar(item["Currently"]) 
+                else:
+                    Currently = "NULL"
+                if "Buy_Price" in item.keys():
+                    Buy_Price = transformDollar(item["Buy_Price"])
+                else:
+                    Buy_Price = "NULL"
+                if not item["First_Bid"] == None:
+                    First_Bid = transformDollar(item["First_Bid"])
+                else:
+                    First_Bid = "NULL"
+                if not item["Number_of_Bids"] == None:
+                    Number_of_Bids = item["Number_of_Bids"]
+                else:
+                    Number_of_Bids = "NULL"
+                if not item["Started"] == None:
+                    Started = transformDttm(item["Started"])
+                else:
+                    Started = "NULL"
+                if not item["Ends"] == None:
+                    Ends = transformDttm(item["Ends"])
+                else:
+                    Ends = "NULL"
+                if item["Description"] == None:
+                    Description = "NULL"
+                else:
+                    Description = sub(r'\"','\"\"',item["Description"])
                     
-                Seller = item["Seller"]
-                SellerID = "\"" + sub(r'\"', '\"\"', Seller["UserID"]) + "\"" if Seller.get("UserID") is not None else "NULL"
-                info = SellerID
-                info += "|" + (Seller["Rating"] if Seller.get("Rating") is not None else "NULL")
-                info += "|" + ("\"" + sub(r'\"', '\"\"', item["Location"]) + "\"" if item.get("Location") is not None else "NULL")
-                info += "|" + ("\"" + sub(r'\"', '\"\"', item["Country"]) + "\"" if item.get("Country") is not None else "NULL")
-                info += "\n"
+                info = ItemID + "|" + '\"' + Name + '\"' + "|" + '\"' + SellerID + '\"' + "|" + Currently + "|" + Buy_Price + "|" + First_Bid + "|" + Number_of_Bids + "|" + '\"' + Started + '\"' + "|" + '\"' + Ends + '\"' + "|" + '\"' + Description + '\"' + "\n"
                 f1.write(info)
-                    
-            # if item.get('Bids') is not None and item['Bids'] != "null": 
-            #     for bid in item['Bids']:
-            #         if 'Bidder' in bid and bid['Bidder'] is not None:
-            #             bidder_id = bid['Bidder']['UserID']
-            #             bid_time = transformDttm(bid['Time'])
-            #             bid_amount = transformDollar(bid['Amount'])
-            #             with open('bids_output.txt', 'a') as bidfile:
-            #                 bidfile.write(f"{item_id}{columnSeparator}{bidder_id}{columnSeparator}{bid_time}{columnSeparator}{bid_amount}\n")
+            
+            
+            # Category.dat (ItemID, Category)
+            with open('Category.dat', 'a') as f2:
+                if ItemID == None:
+                    ItemID = "NULL"
+                for c in Categories:
+                    Category = sub(r'\"','\"\"',c);
+                    info = ItemID + "|" + '\"' + Category + '\"' + "\n"
+                    f2.write(info)
+                
+            
+            # Bid.dat (Bids[Bidder], UserID, Rating, Location, Country, Time, Amount)
+            with open('Bid.dat', 'a') as f3:
+                if not Bids == None:
+                    for i in range(len(Bids)):
+                        if not item["ItemID"] == None:
+                            itemID = item["ItemID"]
+                        else:
+                            itemID = "NULL"
+                        
+                        bidder = Bids[i]["Bid"]
+                        if not bidder["Bidder"]["UserID"] == None:
+                            bidID = sub(r'\"','\"\"',bidder["Bidder"]["UserID"])
+                        else:
+                            bidID = "NULL"
+                        if not bidder["Time"] == None:
+                            time = transformDttm(bidder["Time"])
+                        else:
+                            time = "NULL"
+                        if not bidder["Amount"] == None:
+                            amount = transformDollar(bidder["Amount"])
+                        else:
+                            amount = "NULL"
                             
-            with open('bid.dat', 'a') as f2:
-                for item in items:
-                    ItemID = item["ItemID"]
-                    Bids = item.get("Bids")
-                    if Bids is not None:
-                        for bid in Bids:
-                            Bid = bid["Bid"]
-                            Bidder = Bid["Bidder"]
-                            BidderUserID = Bidder["UserID"]
-                            Time = transformDttm(Bid["Time"])
-                            Amount = transformDollar(Bid["Amount"])
-                            bid_info = f"{ItemID}|\"{BidderUserID}\"|{Time}|{Amount}\n"
-                            f2.write(bid_info)
+                        info = itemID + "|" + '\"' + bidID + '\"' + "|" + '\"' + time + '\"' + "|" + amount  + "\n"
+                        f3.write(info)
+        
+        
+            # User.dat (SellerID, Rating, Location, Country)
+            with open('User.dat', 'a') as f4:
+                if SellerID == None:
+                    SellerID = "NULL"
+                else:
+                    SellerID = sub(r'\"','\"\"',SellerID)
+                if not Seller["Rating"] == None:
+                    rating = Seller["Rating"]
+                else:
+                    rating = "NULL"
+                if not item["Location"] == None:
+                    location = sub(r'\"','\"\"',item["Location"])
+                else:
+                    location = "NULL"
+                if not item["Country"] == None:
+                    country = sub(r'\"','\"\"',item["Country"])
+                else:
+                    country = "NULL"
+                    
+                info = '\"' + SellerID + '\"' + "|" + rating + "|" + '\"' + location + '\"' + "|" + '\"' + country + '\"' + "\n"
+                f4.write(info)
+                            
+            f1.close()
+            f2.close()
+            f3.close()
+            f4.close()
                         
 """
 Loops through each json files provided on the command line and passes each file
